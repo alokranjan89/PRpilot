@@ -2,27 +2,49 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
+import session from "express-session";
+
+import passport from "./config/passport";
+
 import userRoutes from "./routes/user.routes";
+import authRoutes from "./routes/auth.routes";
+
 import { errorHandler } from "./middleware/error.middleware";
 
 const app = express();
 
-// Middlewares
+// Global Middlewares
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
 
+// Session Middleware
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET!,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 
-// Health Check Route
+// Passport Middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Health Check
 app.get("/api/health", (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "PRPilot API is running,"
-    });
+  res.status(200).json({
+    success: true,
+    message: "PRPilot API is running 🚀",
+  });
 });
 
+// Routes
 app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
+
+// Error Handler (Always Last)
 app.use(errorHandler);
 
 export default app;
