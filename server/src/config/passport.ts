@@ -18,7 +18,7 @@ passport.use(
       done
     ) => {
       try {
-        const user = await findOrCreateUser(profile);
+        const user = await findOrCreateUser(profile, accessToken);
 
         const token = generateToken(user.id);
 

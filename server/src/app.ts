@@ -10,11 +10,17 @@ import userRoutes from "./routes/user.routes";
 import authRoutes from "./routes/auth.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
+import cookieParser from "cookie-parser";
 
 const app = express();
 
 // Global Middlewares
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true,
+  })
+);
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
@@ -39,6 +45,8 @@ app.get("/api/health", (req, res) => {
     message: "PRPilot API is running 🚀",
   });
 });
+
+app.use(cookieParser());
 
 // Routes
 app.use("/api/users", userRoutes);
