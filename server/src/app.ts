@@ -11,6 +11,8 @@ import authRoutes from "./routes/auth.routes";
 
 import { errorHandler } from "./middleware/error.middleware";
 import cookieParser from "cookie-parser";
+import githubRoutes from "./routes/github.routes";
+import aiRoutes from "./routes/ai.routes";
 
 const app = express();
 
@@ -51,6 +53,8 @@ app.use(cookieParser());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/github", githubRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Error Handler (Always Last)
 app.use(errorHandler);
