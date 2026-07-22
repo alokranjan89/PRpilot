@@ -1,74 +1,66 @@
 import { Request, Response } from "express";
-import prisma from "../prisma/prisma";
-import { getRepositories } from "../services/github.service";
+import axios from "axios";
 
+// Get logged-in user's repositories
 export const getMyRepositories = async (
   req: Request,
   res: Response
 ) => {
-  // 1. Get current user from database
-  const user = await prisma.user.findUnique({
-    where: {
-      id: req.user!.userId,
-    },
-  });
+  try {
+    const { accessToken } = req.user as any;
 
-  // 2. User not found
-  if (!user) {
-    return res.status(404).json({
+    const response = await axios.get(
+      "https://api.github.com/user/repos",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    res.json({
+      success: true,
+      repositories: response.data,
+    });
+  } catch (error) {
+    console.error(error);
+
+    res.status(500).json({
       success: false,
-      message: "User not found",
+      message: "Failed to fetch repositories",
     });
   }
-
-  // 3. Check GitHub access token
-  if (!user.accessToken) {
-    return res.status(401).json({
-      success: false,
-      message: "GitHub access token not found",
-    });
-  }
-
-  // 4. Fetch repositories from GitHub
-  const repositories = await getRepositories(user.accessToken);
-
-  // 5. Return response
-  return res.status(200).json({
-    success: true,
-    count: repositories.length,
-    repositories,
-  });
 };
 
+// Get README of one repository
 export const getRepositoryReadme = async (
   req: Request,
   res: Response
 ) => {
+  try {
+    const { owner, repo } = req.params;
+    const { accessToken } = req.user as any;
 
-  const { owner, repo } = req.params;
+    const response = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/readme`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.raw",
+        },
+      }
+    );
 
-  const user = await prisma.user.findUnique({
-    where: {
-      id: req.user!.userId,
-    },
-  });
+    res.json({
+      success: true,
+      readme: response.data,
+    });
+  } catch (error) {
+    console.error(error);
 
-  if (!user?.accessToken) {
-    return res.status(401).json({
+    res.status(500).json({
       success: false,
-      message: "GitHub access token missing",
+      message: "Failed to fetch README",
     });
   }
-
-  const readme = await getReadme(
-    owner,
-    repo,
-    user.accessToken
-  );
-
-  return res.json({
-    success: true,
-    readme,
-  });
-
 };
